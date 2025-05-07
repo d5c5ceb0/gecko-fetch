@@ -31,6 +31,8 @@ import { GeckoModule } from './gecko/gecko.module';
       database: process.env.DB_NAME,
       entities: [__dirname + '/**/*.entity{.ts,.js}'],
       synchronize: false,
+      //logging: true,
+      //logger: 'advanced-console',
     }), UserModule, AuthModule, GeckoModule],
 })
 export class AppModule {}

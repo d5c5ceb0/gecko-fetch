@@ -7,7 +7,29 @@ export class GeckoController {
 
   @Get("top")
   async getPools() {
-    return this.geckoService.getAllPools();
+    //# ${id}. ${name}
+    //* address: ${address}
+    //* reserve: ${reserve}
+    //* price in usd: ${name}
+    //* created at: ${pool_created_at}
+    //* link: [${dex}](${link})
+
+    const formatPoolToMarkdown = (pool: any, index: number) => {
+        //return `# ${pool.id}. ${pool.name}
+        return `# ${index + 1}. ${pool.name}
+        * address: ${pool.address}
+        * reserve: ${pool.reserve_in_usd}
+        * created at: ${pool.pool_created_at}
+        * link: [${pool.dex}](${pool.link})`;
+        
+       // * price in usd: ${pool.base_token_price_usd}
+    }
+
+    // Then in your controller:
+    const pools = await this.geckoService.getAllPools();
+    const markdown = pools.map((pool, index) => formatPoolToMarkdown(pool, index)).join('\n\n');
+
+    return markdown;
   }
 
   //@Get(":id")

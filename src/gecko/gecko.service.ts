@@ -20,7 +20,7 @@ export class GeckoService {
     private readonly topPoolRepo: Repository<TopPool>
   ) {}
 
-  @Cron('0 */1 * * * *')
+  @Cron('0 */3 * * * *')
   async fetchNewPools() {
     this.logger.log('start fetching GeckoTerminal API...');
     try {
@@ -61,6 +61,16 @@ export class GeckoService {
 
     // Get pool records using the ids
     const pools = await this.poolRepo.find({
+        select: {
+            id: true,
+            address: true,
+            name: true,
+            base_token_price_usd: true,
+            reserve_in_usd: true,
+            dex: true,
+            link: true,
+            pool_created_at: true,
+        },
         where: { id: In(poolIds) },
         take: 5  // Limit to 5 records
     });
@@ -82,9 +92,6 @@ export class GeckoService {
   }
 
   async refreshPools(poolList: any[]) {
-    // clear top_pools
-    await this.topPoolRepo.clear();
-  
     let poolIds: string[] = [];
 
     for (const pool of poolList) {
@@ -98,7 +105,9 @@ export class GeckoService {
           reserve_in_usd: this.parseNumber(attributes.reserve_in_usd),
           dex: relationships?.dex?.data?.id || undefined,
           link: attributes.address ? `https://pancakeswap.finance/info/pairs/${attributes.address}` : undefined, // Convert null to undefined
-              updated_at: new Date(),
+          updated_at: new Date(),
+          pool_created_at: attributes.pool_created_at || undefined,
+
       });
 
       const p = await this.poolRepo.save(newPool);
@@ -110,11 +119,10 @@ export class GeckoService {
     let ids = JSON.stringify(poolIds);
     this.logger.log(`pool ids: ${ids}`);
     const top = this.topPoolRepo.create({
-        id: uuidv4(),
         pool_ids: ids,
         updated_at: new Date(),
     });
-    this.logger.log('Inserting top pool with ID:', top.id);
+    this.logger.log('Inserting top pool with ID:', top);
     const t = await this.topPoolRepo.save(top);
     this.logger.log(`success to save ${t} records`);
   }

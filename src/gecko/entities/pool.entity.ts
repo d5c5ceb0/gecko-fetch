@@ -23,6 +23,9 @@ export class Pool {
   @Column({ nullable: true })
   link: string;
 
+  @Column({ nullable: true })
+  pool_created_at: string;
+
   @CreateDateColumn({ type: 'timestamp' })
   created_at: Date;
 

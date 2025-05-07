@@ -5,7 +5,7 @@ export class TopPool {
   @PrimaryGeneratedColumn('uuid')
   id: string;
 
-  @Column()
+  @Column('text')
   pool_ids: string;
 
   @CreateDateColumn({ type: 'timestamp' })
