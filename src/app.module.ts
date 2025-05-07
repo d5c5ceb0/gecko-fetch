@@ -5,6 +5,7 @@ import { UserModule } from './user/user.module';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { AuthModule } from './auth/auth.module';
 import { ConfigModule } from '@nestjs/config';
+import { GeckoModule } from './gecko/gecko.module';
 
 
 
@@ -30,6 +31,6 @@ import { ConfigModule } from '@nestjs/config';
       database: process.env.DB_NAME,
       entities: [__dirname + '/**/*.entity{.ts,.js}'],
       synchronize: false,
-    }), UserModule, AuthModule],
+    }), UserModule, AuthModule, GeckoModule],
 })
 export class AppModule {}

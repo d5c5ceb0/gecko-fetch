@@ -1,0 +1,20 @@
+import { Module } from '@nestjs/common';
+import { HttpModule } from '@nestjs/axios';
+import { ScheduleModule } from '@nestjs/schedule';
+import { TypeOrmModule } from '@nestjs/typeorm';
+import { Pool } from './entities/pool.entity';
+import { TopPool } from './entities/top-pool.entity';
+import { GeckoService } from './gecko.service';
+import { GeckoController } from './gecko.controller';
+
+
+@Module({
+  imports: [
+    HttpModule,
+    ScheduleModule.forRoot(),
+    TypeOrmModule.forFeature([Pool, TopPool]),
+  ],
+  controllers: [GeckoController],
+  providers: [GeckoService],
+})
+export class GeckoModule {}
