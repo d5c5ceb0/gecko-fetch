@@ -16,7 +16,7 @@ export class GeckoController {
 
     const formatPoolToMarkdown = (pool: any, index: number) => {
         //return `# ${pool.id}. ${pool.name}
-        return `# ${index + 1}. ${pool.name}
+        return `${index + 1}. ${pool.name}
         * address: ${pool.address}
         * reserve: ${pool.reserve_in_usd}
         * created at: ${pool.pool_created_at}
@@ -27,9 +27,9 @@ export class GeckoController {
 
     // Then in your controller:
     const pools = await this.geckoService.getAllPools();
-    const markdown = pools.map((pool, index) => formatPoolToMarkdown(pool, index)).join('\n\n');
+    const markdown = pools.map((pool, index) => formatPoolToMarkdown(pool, index)).join('\n');
 
-    return markdown;
+    return "*Here are the details of the top five trading pairs ranked by liquidity:*⚡️⚡️⚡️ \n\n" + markdown;
   }
 
   //@Get(":id")
