@@ -5,8 +5,8 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, In } from 'typeorm';
 import { Pool } from './entities/pool.entity';
 import { TopPool } from './entities/top-pool.entity';
+import { NewPool } from './entities/new-pool.entity';
 import { firstValueFrom } from 'rxjs';
-import { v4 as uuidv4 } from 'uuid';
 
 @Injectable()
 export class GeckoService {
@@ -17,10 +17,12 @@ export class GeckoService {
     @InjectRepository(Pool)
     private readonly poolRepo: Repository<Pool>,
     @InjectRepository(TopPool)
-    private readonly topPoolRepo: Repository<TopPool>
+    private readonly topPoolRepo: Repository<TopPool>,
+    @InjectRepository(NewPool)
+    private readonly newPoolRepo: Repository<NewPool>
   ) {}
 
-  @Cron('0 */3 * * * *')
+  @Cron('0 */1 * * * *')
   async fetchNewPools() {
     this.logger.log('start fetching GeckoTerminal API...');
     try {
@@ -34,22 +36,44 @@ export class GeckoService {
       this.logger.log(`get ${res.data.data.length} pools from GeckoTerminal API`);
 
       const pools = res.data?.data || [];
-      await this.refreshPools(pools);
+      await this.refreshPools(pools, true);
 
       this.logger.log(`success to save ${pools.length} records`);
+
+      const res2 = await firstValueFrom(
+        this.httpService.get(
+          'https://api.geckoterminal.com/api/v2/networks/bsc/pools?include=base_token&page=1',
+          { headers: { accept: 'application/json' } },
+        ),
+      );
+
+      const pools2 = res.data?.data || [];
+      await this.refreshPools(pools2, false);
+
+      this.logger.log(`get ${res2.data.data.length} top pools from GeckoTerminal API`);
+
     } catch (err) {
       this.logger.error('failed to fetch new pools', err);
     }
   }
 
-  async getAllPools(): Promise<Pool[]> {
+  async getAllPools(isNewPool = false): Promise<Pool[]> {
     Logger.log('start fetching pools from topool...');
     // Get the latest record from topool
+    let latestToPool;
     try {
-    const latestToPool = await this.topPoolRepo.findOne({
-        where: {},  // Add empty where clause
-        order: { created_at: 'DESC' }
-    });
+        if (isNewPool) {
+            latestToPool = await this.newPoolRepo.findOne({
+                where: {},  // Add empty where clause
+                order: { created_at: 'DESC' }
+            });
+        } else {
+            latestToPool = await this.topPoolRepo.findOne({
+                where: {},  // Add empty where clause
+                order: { created_at: 'DESC' }
+            });
+        }
+        
     Logger.log(`get ${latestToPool?.pool_ids?.length} pools from topool`);
 
     if (!latestToPool || !latestToPool.pool_ids) {
@@ -91,7 +115,7 @@ export class GeckoService {
       }
   }
 
-  async refreshPools(poolList: any[]) {
+  async refreshPools(poolList: any[], isNewPool = false) {
     let poolIds: string[] = [];
 
     for (const pool of poolList) {
@@ -116,14 +140,24 @@ export class GeckoService {
       poolIds.push(p.id.toString());
 
     }
+
     let ids = JSON.stringify(poolIds);
     this.logger.log(`pool ids: ${ids}`);
-    const top = this.topPoolRepo.create({
+
+    if (isNewPool) {
+      const newPool = this.newPoolRepo.create({
+        pool_ids: JSON.stringify(poolIds),
+        updated_at: new Date(),
+      });
+      this.logger.log('Inserting new pool with ID:', newPool);
+      await this.newPoolRepo.save(newPool);
+    } else {
+      const topPool = this.topPoolRepo.create({
         pool_ids: ids,
         updated_at: new Date(),
-    });
-    this.logger.log('Inserting top pool with ID:', top);
-    const t = await this.topPoolRepo.save(top);
-    this.logger.log(`success to save ${t} records`);
+      });
+      this.logger.log('Inserting top pool with ID:', topPool);
+      await this.topPoolRepo.save(topPool);
+    }
   }
 }

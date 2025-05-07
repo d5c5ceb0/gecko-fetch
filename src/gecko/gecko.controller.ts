@@ -5,6 +5,42 @@ import { GeckoService } from './gecko.service';
 export class GeckoController {
   constructor(private readonly geckoService: GeckoService) {}
 
+
+  shortenAddress(address: string, chars = 4): string {
+    if (!address) return '';
+    return `${address.slice(0, chars + 2)}...${address.slice(-chars)}`;
+  }
+
+  @Get("new")
+  async getNewPools() {
+    //# ${id}. ${name}
+    //* address: ${address}
+    //* reserve: ${reserve}
+    //* price in usd: ${name}
+    //* created at: ${pool_created_at}
+    //* link: [${dex}](${link})
+
+    const formatPoolToMarkdown = (pool: any, index: number) => {
+        let addr = this.shortenAddress(pool.address);
+
+        //return `# ${pool.id}. ${pool.name}
+        return `${index + 1}. ${pool.name}
+        \\* address: [${addr}](${pool.link})
+        \\* reserve: ${pool.reserve_in_usd}
+        \\* created at: ${pool.pool_created_at}
+        \\* link: [${pool.dex}](${pool.link})`;
+       // * price in usd: ${pool.base_token_price_usd}
+    }
+
+    // Then in your controller:
+    const pools = await this.geckoService.getAllPools(true);
+    const markdown = pools.map((pool, index) => formatPoolToMarkdown(pool, index)).join('\n');
+
+    return "*TOP BSC Bot*\n\n*Here are the details of the latest five trading pairs ranked by liquidity:*⚡️⚡️⚡️ \n\n" + markdown;
+
+  }
+
+
   @Get("top")
   async getPools() {
     //# ${id}. ${name}
@@ -15,21 +51,23 @@ export class GeckoController {
     //* link: [${dex}](${link})
 
     const formatPoolToMarkdown = (pool: any, index: number) => {
+        let addr = this.shortenAddress(pool.address);
+
         //return `# ${pool.id}. ${pool.name}
         return `${index + 1}. ${pool.name}
-        * address: ${pool.address}
-        * reserve: ${pool.reserve_in_usd}
-        * created at: ${pool.pool_created_at}
-        * link: [${pool.dex}](${pool.link})`;
-        
+        \\* address: [${addr}](${pool.link})
+        \\* reserve: ${pool.reserve_in_usd}
+        \\* created at: ${pool.pool_created_at}
+        \\* link: [${pool.dex}](${pool.link})`;
        // * price in usd: ${pool.base_token_price_usd}
     }
 
     // Then in your controller:
-    const pools = await this.geckoService.getAllPools();
+    const pools = await this.geckoService.getAllPools(false);
     const markdown = pools.map((pool, index) => formatPoolToMarkdown(pool, index)).join('\n');
 
-    return "*Here are the details of the top five trading pairs ranked by liquidity:*⚡️⚡️⚡️ \n\n" + markdown;
+    return "*TOP BSC Bot*\n\n*Here are the details of the top five trading pairs ranked by liquidity:*⚡️⚡️⚡️ \n\n" + markdown;
+
   }
 
   //@Get(":id")
