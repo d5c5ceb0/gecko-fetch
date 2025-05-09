@@ -151,6 +151,8 @@ export class GeckoService {
           link = `https://pancakeswap.finance/info/pairs/${attributes.address}`;
       } else if (relationships?.dex?.data?.id === 'pancakeswap-v1-bsc') {
           link = `https://pancakeswap.finance/swap?outputCurrency=${base_token_address}&chainId=56`;
+      } else if (relationships?.dex?.data?.id === 'pancakeswapv2') {
+          link = `https://pancakeswap.finance/info/pairs/${attributes.address}`;
       }
 
       const newPool = this.poolRepo.create({
