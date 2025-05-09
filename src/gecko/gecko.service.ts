@@ -48,7 +48,7 @@ export class GeckoService {
       );
 
       const pools2 = res2.data?.data || [];
-      await this.refreshPools(res2.data, false);
+      await this.refreshPools(res2, false);
 
       this.logger.log(`get ${pools2.length} top pools from GeckoTerminal API`);
 
@@ -144,6 +144,15 @@ export class GeckoService {
       const volume_5m = attributes.volume_usd.m5;
       const trans_volume_5m = `${transactions_5m.buys+transactions_5m.sells} | \$${volume_5m}`;
 
+      let link;
+      if (relationships?.dex?.data?.id === 'pancakeswap-v3-bsc') {
+          link = `https://pancakeswap.finance/info/v3/bsc/pairs/${attributes.address}`;
+      } else if (relationships?.dex?.data?.id === 'pancakeswap_v2') {
+          link = `https://pancakeswap.finance/info/pairs/${attributes.address}`;
+      } else if (relationships?.dex?.data?.id === 'pancakeswap-v1-bsc') {
+          link = `https://pancakeswap.finance/swap?outputCurrency=${base_token_address}&chainId=56`;
+      }
+
       const newPool = this.poolRepo.create({
           address: attributes.address?.toLowerCase()?.trim() || undefined, // Convert null to undefined
           name: base_token_name || undefined,
@@ -156,7 +165,7 @@ export class GeckoService {
           base_token_price_usd: this.parseNumber(attributes.base_token_price_usd),
           reserve_in_usd: this.parseNumber(attributes.reserve_in_usd),
           dex: relationships?.dex?.data?.id || undefined,
-          link: attributes.address ? `https://pancakeswap.finance/info/pairs/${attributes.address}` : undefined, // Convert null to undefined
+          link: attributes.address ? link : undefined, // Convert null to undefined
           updated_at: new Date(),
           pool_created_at: attributes.pool_created_at || undefined,
 
