@@ -48,13 +48,14 @@ export class BalanceTrackerService {
 
           // TODO: Replace with actual notifier
           const res = await firstValueFrom(
-                  //`https://api.telegram.org/bot7715530319:AAFNAAvS6PDycJPI6nRlZeU_SPWyBy_kA38/sendMessage`,
-                  //{ headers: { accept: 'application/json' } },
               this.httpService.post(
-                `https://api.telegram.org/bot${process.env.TELEGRAM_TOKEN}/sendMessage`,
+                process.env.TGBOG_URL || 'https://api.telegram.org/bot',
                 {
-                  chat_id: entry.owner,
-                  text: `address ${entry.address} ${isOut ? 'transferred' : 'recived'} ${ethers.formatEther(diff)} BNB`,
+                  bot_name: 'modelstation_test_bot',
+                  data: JSON.stringify({
+                      chat_id: entry.owner,
+                      text: `address ${entry.address} ${isOut ? 'transferred' : 'recived'} ${ethers.formatEther(diff)} BNB`,
+                  }),
                 },
                 { headers: { accept: 'application/json' } },
               )
