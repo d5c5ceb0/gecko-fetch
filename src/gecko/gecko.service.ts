@@ -22,7 +22,7 @@ export class GeckoService {
     private readonly newPoolRepo: Repository<NewPool>
   ) {}
 
-  @Cron('0 */1 * * * *')
+  @Cron('0 */3 * * * *')
   async fetchNewPools() {
     this.logger.log('start fetching GeckoTerminal API...');
     try {
@@ -36,7 +36,7 @@ export class GeckoService {
       this.logger.log(`get ${res.data.data.length} pools from GeckoTerminal API`);
 
       const pools = res.data?.data || [];
-      await this.refreshPools(pools, true);
+      await this.refreshPools(res.data, true);
 
       this.logger.log(`success to save ${pools.length} records`);
 
@@ -47,10 +47,10 @@ export class GeckoService {
         ),
       );
 
-      const pools2 = res.data?.data || [];
-      await this.refreshPools(pools2, false);
+      const pools2 = res2.data?.data || [];
+      await this.refreshPools(res2.data, false);
 
-      this.logger.log(`get ${res2.data.data.length} top pools from GeckoTerminal API`);
+      this.logger.log(`get ${pools2.length} top pools from GeckoTerminal API`);
 
     } catch (err) {
       this.logger.error('failed to fetch new pools', err);
@@ -115,22 +115,42 @@ export class GeckoService {
       }
   }
 
-  async refreshPools(poolList: any[], isNewPool = false) {
+  async refreshPools(res: any, isNewPool = false) {
+    const poolList = res.data?.data || [];
+    const includeList = res.data?.included || [];
+
     let poolIds: string[] = [];
 
     for (const pool of poolList) {
       const attributes = pool.attributes;
       const relationships = pool.relationships;
 
+
+      const base_token_id = relationships?.base_token?.data?.id || undefined;
+      const base_token_name = includeList.find((item: any) => item.id === base_token_id).attributes.name;
+      const base_token_symbol = includeList.find((item: any) => item.id === base_token_id).attributes.symbol;
+      const base_token_address = includeList.find((item: any) => item.id === base_token_id).attributes.address;
+      const price_change_percentage = `${attributes.price_change_percentage.m5.toFixed(2)}% | ${attributes.price_change_percentage.h1.toFixed(2)}% | ${attributes.price_change_percentage.h6.toFixed(2)}%`; 
+      const transactions_5m = attributes.transactions.m5;
+      const volume_5m = attributes.volume_usd.m5;
+      const trans_volume_5m = `${transactions_5m.buys+transactions_5m.sells} | \$${volume_5m}`;
+
       const newPool = this.poolRepo.create({
           address: attributes.address?.toLowerCase()?.trim() || undefined, // Convert null to undefined
-          name: attributes.name?.trim() || undefined,
+          name: base_token_name || undefined,
+          symbol: base_token_symbol || undefined,
+          token_address: base_token_address || undefined,
+          price_change_percentage: price_change_percentage || undefined,
+          transactions_5m: trans_volume_5m || undefined,
+          holders: "125",
+          top10: "17%",
           base_token_price_usd: this.parseNumber(attributes.base_token_price_usd),
           reserve_in_usd: this.parseNumber(attributes.reserve_in_usd),
           dex: relationships?.dex?.data?.id || undefined,
           link: attributes.address ? `https://pancakeswap.finance/info/pairs/${attributes.address}` : undefined, // Convert null to undefined
           updated_at: new Date(),
           pool_created_at: attributes.pool_created_at || undefined,
+
 
       });
 

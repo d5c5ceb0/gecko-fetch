@@ -44,17 +44,16 @@ export class BalanceTrackerService {
 
         if (diff >= this.THRESHOLD) {
           const isOut = previous > currentBalance;
-          this.logger.warn(`[alert] address ${entry.address} ${isOut ? 'transferred' : 'recived'} ${ethers.formatEther(diff)} BNB`);
+          this.logger.warn(`[alert] address ${entry.address} ${isOut ? 'transferred' : 'received'} ${ethers.formatEther(diff)} BNB`);
 
-          // TODO: Replace with actual notifier
           const res = await firstValueFrom(
               this.httpService.post(
-                process.env.TGBOG_URL || 'https://api.telegram.org/bot',
+                'http://127.0.0.1:6666/mission',  //TODO
                 {
                   bot_name: 'modelstation_test_bot',
                   data: JSON.stringify({
                       chat_id: entry.owner,
-                      text: `address ${entry.address} ${isOut ? 'transferred' : 'recived'} ${ethers.formatEther(diff)} BNB`,
+                      text: `address ${entry.address} ${isOut ? 'transferred' : 'received'} ${ethers.formatEther(diff)} BNB`,
                   }),
                 },
                 { headers: { accept: 'application/json' } },
@@ -78,7 +77,7 @@ export class BalanceTrackerService {
   }
 
   async add_address(address: string, owner: string) {
-    const exists = await this.smartRepo.findOne({ where: { address } });
+    const exists = await this.smartRepo.findOne({ where: { owner, address } });
     if (exists) {
       return;
     }

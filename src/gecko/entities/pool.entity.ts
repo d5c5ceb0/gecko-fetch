@@ -11,6 +11,24 @@ export class Pool {
   @Column()
   name: string;
 
+  @Column()
+  symbol: string;
+
+  @Column()
+  token_address: string;
+
+  @Column()
+  price_change_percentage: string;
+
+  @Column()
+  transactions_5m: string
+
+  @Column()
+  holders: string;
+
+  @Column()
+  top10: string;
+
   @Column({ type: 'numeric', nullable: true })
   base_token_price_usd: number;
 
