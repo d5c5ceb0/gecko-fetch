@@ -14,11 +14,11 @@ export class GeckoController {
   @Get("new")
   async getNewPools() {
     const formatPoolToMarkdown = (pool: any, index: number) => {
-        return `Smart Money Buy: *${pool.symbol}*⚡️⚡️⚡️: \n\n⚡️ ${pool.symbol}(${pool.name})\n📍 ${pool.token_address}\n\n⏱️  5m | 1h |6h: *${pool.price_change_percentage}*\n🔄 5m Txs/Vol: *${pool.transactions_5m}*\n💰 Liq: \$*${pool.reserve_in_usd}*🔥\n👥 Holder: *${pool.holders}*\n📅 Open: *${pool.pool_created_at}*\n🏆 Top 10: *${pool.top10}*\n📈 *[${pool.dex}](${pool.link})*\n\n`;
+        return `Smart Money Buy: *${pool.symbol}*⚡️⚡️⚡️: \n\n⚡️ ${pool.symbol}(${pool.name})\n📍 ${pool.token_address}\n\n⏱️  5m | 1h |6h: *${pool.price_change_percentage}*\n🔄 5m Txs/Vol: *${pool.transactions_5m}*\n💰 Liq: \$*${pool.reserve_in_usd}*🔥\n👥 Holder: *${pool.holders}*\n📅 Open: *${pool.pool_created_at}*\n🏆 Top 10: *${pool.top10}*\n📈 [${pool.dex}](${pool.link})\n\n`;
     }
 
     const formatPoolToMarkdown2 = (pool: any, index: number) => {
-        return `⚡️ ${pool.symbol}(${pool.name})\n📍 ${pool.token_address}\n📈 *[${pool.dex}](${pool.link})*\n\n`;
+        return `⚡️ ${pool.symbol}(${pool.name})\n📍 ${pool.token_address}\n📈 [${pool.dex}](${pool.link})\n\n`;
     }
 
     // Then in your controller:
@@ -26,18 +26,18 @@ export class GeckoController {
     const markdown = pools.slice(0,1).map((pool, index) => formatPoolToMarkdown(pool, index)).join('\n');
     const markdown2 = pools.slice(1).map((pool, index) => formatPoolToMarkdown2(pool, index)).join('\n');
 
-    return "🔥*Latest tokens on BNB*\n" + markdown + markdown2;
+    return "🔥*Latest tokens on BNB*\n" + markdown + markdown2 + "\n\n🔥🔥🔥 [more](https://pancakeswap.finance/)\n\n";;
   }
 
 
   @Get("top")
   async getPools() {
     const formatPoolToMarkdown = (pool: any, index: number) => {
-        return `Smart Money Buy: *${pool.symbol}*⚡️⚡️⚡️: \n\n⚡️ ${pool.symbol}(${pool.name})\n📍 ${pool.token_address}\n\n⏱️  5m | 1h |6h: *${pool.price_change_percentage}*\n🔄 5m Txs/Vol: *${pool.transactions_5m}*\n💰 Liq: \$*${pool.reserve_in_usd}*🔥\n👥 Holder: *${pool.holders}*\n📅 Open: *${pool.pool_created_at}*\n🏆 Top 10: *${pool.top10}*\n📈 *[${pool.dex}](${pool.link})*\n\n`;
+        return `Smart Money Buy: *${pool.symbol}*⚡️⚡️⚡️: \n\n⚡️ ${pool.symbol}(${pool.name})\n📍 ${pool.token_address}\n\n⏱️  5m | 1h |6h: *${pool.price_change_percentage}*\n🔄 5m Txs/Vol: *${pool.transactions_5m}*\n💰 Liq: \$*${pool.reserve_in_usd}*🔥\n👥 Holder: *${pool.holders}*\n📅 Open: *${pool.pool_created_at}*\n🏆 Top 10: *${pool.top10}*\n📈 [${pool.dex}](${pool.link})\n\n`;
     }
 
     const formatPoolToMarkdown2 = (pool: any, index: number) => {
-        return `⚡️ ${pool.symbol}(${pool.name})\n📍 ${pool.token_address}\n📈 *[${pool.dex}](${pool.link})*\n\n`;
+        return `⚡️ ${pool.symbol}(${pool.name})\n📍 ${pool.token_address}\n📈 [${pool.dex}](${pool.link})\n\n`;
     }
 
     // Then in your controller:
@@ -45,7 +45,8 @@ export class GeckoController {
     const markdown = pools.slice(0,1).map((pool, index) => formatPoolToMarkdown(pool, index)).join('\n');
     const markdown2 = pools.slice(1).map((pool, index) => formatPoolToMarkdown2(pool, index)).join('\n');
 
-    return "🔥*TOP tokens on BNB*\n" + markdown + markdown2;
+    return "🔥*TOP tokens on BNB*\n" + markdown + markdown2 + "\n\n🔥🔥🔥 [more](https://pancakeswap.finance/)\n\n";
 
   }
 
+}
