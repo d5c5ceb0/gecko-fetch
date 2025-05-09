@@ -22,7 +22,7 @@ export class GeckoService {
     private readonly newPoolRepo: Repository<NewPool>
   ) {}
 
-  @Cron('0 */3 * * * *')
+  @Cron('0 */1 * * * *')
   async fetchNewPools() {
     this.logger.log('start fetching GeckoTerminal API...');
     try {
@@ -36,7 +36,7 @@ export class GeckoService {
       this.logger.log(`get ${res.data.data.length} pools from GeckoTerminal API`);
 
       const pools = res.data?.data || [];
-      await this.refreshPools(res.data, true);
+      await this.refreshPools(res, true);
 
       this.logger.log(`success to save ${pools.length} records`);
 
@@ -89,6 +89,12 @@ export class GeckoService {
             id: true,
             address: true,
             name: true,
+            token_address: true,
+            symbol: true,
+            price_change_percentage: true,
+            transactions_5m: true,
+            holders: true,
+            top10: true,
             base_token_price_usd: true,
             reserve_in_usd: true,
             dex: true,
@@ -118,10 +124,12 @@ export class GeckoService {
   async refreshPools(res: any, isNewPool = false) {
     const poolList = res.data?.data || [];
     const includeList = res.data?.included || [];
+    this.logger.log(`get ${poolList.length} pools from GeckoTerminal API`);
 
     let poolIds: string[] = [];
 
     for (const pool of poolList) {
+      this.logger.log(`processing pool: ${pool.id}`);
       const attributes = pool.attributes;
       const relationships = pool.relationships;
 
@@ -130,7 +138,8 @@ export class GeckoService {
       const base_token_name = includeList.find((item: any) => item.id === base_token_id).attributes.name;
       const base_token_symbol = includeList.find((item: any) => item.id === base_token_id).attributes.symbol;
       const base_token_address = includeList.find((item: any) => item.id === base_token_id).attributes.address;
-      const price_change_percentage = `${attributes.price_change_percentage.m5.toFixed(2)}% | ${attributes.price_change_percentage.h1.toFixed(2)}% | ${attributes.price_change_percentage.h6.toFixed(2)}%`; 
+      const price_change_percentage = `${attributes.price_change_percentage.m5}% | ${attributes.price_change_percentage.h1}% | ${attributes.price_change_percentage.h6}%`;
+
       const transactions_5m = attributes.transactions.m5;
       const volume_5m = attributes.volume_usd.m5;
       const trans_volume_5m = `${transactions_5m.buys+transactions_5m.sells} | \$${volume_5m}`;

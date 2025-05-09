@@ -23,20 +23,30 @@ export class GeckoController {
     const formatPoolToMarkdown = (pool: any, index: number) => {
         let addr = this.shortenAddress(pool.address);
 
-        //return `# ${pool.id}. ${pool.name}
-        return `${index + 1}. ${pool.name}
-        \\* address: [${addr}](${pool.link})
-        \\* reserve: ${pool.reserve_in_usd}
-        \\* created at: ${pool.pool_created_at}
-        \\* link: [${pool.dex}](${pool.link})`;
-       // * price in usd: ${pool.base_token_price_usd}
+            //token_address: true,
+            //symbol: true,
+            //price_change_percentage: true,
+            //transactions_5m: true,
+            //holders: true,
+            //top10: true,
+
+        //return `⚡️ ${pool.id}. ${pool.name}
+        return `⚡️ ${pool.symbol}(${pool.name})
+            📍 ${pool.token_address}
+            ⏱️  ${pool.price_change_percentage}
+            🔄 ${pool.transactions_5m}
+            💰 ${pool.reserve_in_usd}
+            👥 ${pool.holders}
+            📅 ${pool.created_at}
+            🏆 ${pool.top10}
+            [${pool.dex}](${pool.link})`;
     }
 
     // Then in your controller:
     const pools = await this.geckoService.getAllPools(true);
     const markdown = pools.map((pool, index) => formatPoolToMarkdown(pool, index)).join('\n');
 
-    return "*TOP BSC Bot*\n\n*Here are the details of the latest five trading pairs ranked by liquidity:*⚡️⚡️⚡️ \n\n" + markdown;
+    return "🔥*TOP tokens on BNB*\n\n*Smart Money Buy: *⚡️⚡️⚡️ \n\n" + markdown;
 
   }
 
