@@ -5,7 +5,7 @@ export class SmartAddress {
   @PrimaryGeneratedColumn()
   id: number;
 
-  @Column({ unique: true })
+  @Column({ unique: false})
   address: string;
 
   @Column()
