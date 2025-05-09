@@ -46,11 +46,13 @@ export class BalanceTrackerService {
           const isOut = previous > currentBalance;
           this.logger.warn(`[alert] address ${entry.address} ${isOut ? 'transferred' : 'received'} ${ethers.formatEther(diff)} BNB`);
 
+          const texts = `💰【大户监控 Smart Money Watch】💰🔍🔍\n📍 地址 Address: ${entry.address}\n📈 ${isOut ? '发送Sent' : '收到Received'}: 13.668315262493647261 BNB`
+
           const res = await firstValueFrom(
               this.httpService.post(
                 'http://127.0.0.1:6666/mission',  //TODO
                 {
-                  bot_name: 'modelstation_test_bot',
+                  bot_name: 'modelstation_test_bot', //TODO
                   data: JSON.stringify({
                       chat_id: entry.owner,
                       text: `address ${entry.address} ${isOut ? 'transferred' : 'received'} ${ethers.formatEther(diff)} BNB`,
