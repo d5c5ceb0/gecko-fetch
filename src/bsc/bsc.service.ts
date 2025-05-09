@@ -4,6 +4,8 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { SmartAddress } from './entities/address.entity';
 import { Repository } from 'typeorm';
 import { ethers } from 'ethers';
+import { HttpService } from '@nestjs/axios';
+import { firstValueFrom } from 'rxjs';
 
 @Injectable()
 export class BalanceTrackerService {
@@ -12,6 +14,7 @@ export class BalanceTrackerService {
   private readonly logger = new Logger(BalanceTrackerService.name);
 
   constructor(
+    private readonly httpService: HttpService,
     @InjectRepository(SmartAddress)
     private readonly smartRepo: Repository<SmartAddress>,
   ) {}
@@ -44,6 +47,19 @@ export class BalanceTrackerService {
           this.logger.warn(`[alert] address ${entry.address} ${isOut ? 'transferred' : 'recived'} ${ethers.formatEther(diff)} BNB`);
 
           // TODO: Replace with actual notifier
+          const res = await firstValueFrom(
+                  //`https://api.telegram.org/bot7715530319:AAFNAAvS6PDycJPI6nRlZeU_SPWyBy_kA38/sendMessage`,
+                  //{ headers: { accept: 'application/json' } },
+              this.httpService.post(
+                `https://api.telegram.org/bot${process.env.TELEGRAM_TOKEN}/sendMessage`,
+                {
+                  chat_id: entry.owner,
+                  text: `address ${entry.address} ${isOut ? 'transferred' : 'recived'} ${ethers.formatEther(diff)} BNB`,
+                },
+                { headers: { accept: 'application/json' } },
+              )
+          );
+
         }
 
         entry.lastBalance = ethers.formatEther(currentBalance);
