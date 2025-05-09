@@ -1,11 +1,13 @@
 import { Module } from '@nestjs/common';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
+import { ScheduleModule } from '@nestjs/schedule';
 import { UserModule } from './user/user.module';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { AuthModule } from './auth/auth.module';
 import { ConfigModule } from '@nestjs/config';
 import { GeckoModule } from './gecko/gecko.module';
+import { BscModule } from './bsc/bsc.module';
 
 
 
@@ -33,6 +35,8 @@ import { GeckoModule } from './gecko/gecko.module';
       synchronize: false,
       //logging: true,
       //logger: 'advanced-console',
-    }), UserModule, AuthModule, GeckoModule],
+    }),
+    ScheduleModule.forRoot(),
+    UserModule, AuthModule, GeckoModule, BscModule],
 })
 export class AppModule {}
