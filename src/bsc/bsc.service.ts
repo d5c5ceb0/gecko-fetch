@@ -90,4 +90,15 @@ export class BalanceTrackerService {
       };
     });
   }
+
+  async remove_address(address: string, owner: string) {
+    const exists = await this.smartRepo.findOne({ where: { address, owner } });
+    if (!exists) {
+      this.logger.error(`Address ${address} not found`);
+      return
+    }
+
+    await this.smartRepo.delete({ address, owner });
+    return this.get_addresses(owner);
+  }
 }

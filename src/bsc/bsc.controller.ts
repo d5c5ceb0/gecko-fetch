@@ -1,8 +1,9 @@
 import { Controller, Logger, Get, Post, Body, HttpCode, Query } from '@nestjs/common';
 import { BalanceTrackerService } from './bsc.service';
 import { CreateAddressDto } from './dto/create-address.dto';
+import {ApiBody} from '@nestjs/swagger';
 
-@Controller('bsc')
+@Controller('api/v1/bsc')
 export class BscController {
     private readonly logger = new Logger(BscController.name);
 
@@ -21,6 +22,23 @@ export class BscController {
     ) {
         this.logger.log(`Getting tracked addresses`);
         let addresses = await this.bscService.get_addresses(owner);
+        return addresses;
+    }
+
+    @Post('address/remove')
+    @HttpCode(200)
+    @ApiBody({
+      schema: {
+        type: 'object',
+        properties: {
+          address: { type: 'string' },
+          owner: { type: 'string' },
+        },
+      }
+  })
+    async removeTrackAddress( @Body() body: { address: string, owner: string }) {
+        this.logger.log(`Removing address from tracking: ${body.address}`);
+        let addresses = await this.bscService.remove_address(body.address, body.owner);
         return addresses;
     }
 }
