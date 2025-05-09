@@ -13,13 +13,6 @@ export class GeckoController {
 
   @Get("new")
   async getNewPools() {
-    //# ${id}. ${name}
-    //* address: ${address}
-    //* reserve: ${reserve}
-    //* price in usd: ${name}
-    //* created at: ${pool_created_at}
-    //* link: [${dex}](${link})
-
     const formatPoolToMarkdown = (pool: any, index: number) => {
         return `Smart Money Buy: *${pool.symbol}*⚡️⚡️⚡️: \n\n⚡️ ${pool.symbol}(${pool.name})\n📍 ${pool.token_address}\n\n⏱️  5m | 1h |6h: *${pool.price_change_percentage}*\n🔄 5m Txs/Vol: *${pool.transactions_5m}*\n💰 Liq: \$*${pool.reserve_in_usd}*🔥\n👥 Holder: *${pool.holders}*\n📅 Open: *${pool.pool_created_at}*\n🏆 Top 10: *${pool.top10}*\n📈 *[${pool.dex}](${pool.link})*\n\n`;
     }
@@ -33,49 +26,26 @@ export class GeckoController {
     const markdown = pools.slice(0,1).map((pool, index) => formatPoolToMarkdown(pool, index)).join('\n');
     const markdown2 = pools.slice(1).map((pool, index) => formatPoolToMarkdown2(pool, index)).join('\n');
 
-    return "🔥*TOP tokens on BNB*\n" + markdown;
-
+    return "🔥*Latest tokens on BNB*\n" + markdown + markdown2;
   }
 
 
   @Get("top")
   async getPools() {
-    //# ${id}. ${name}
-    //* address: ${address}
-    //* reserve: ${reserve}
-    //* price in usd: ${name}
-    //* created at: ${pool_created_at}
-    //* link: [${dex}](${link})
-
     const formatPoolToMarkdown = (pool: any, index: number) => {
-        let addr = this.shortenAddress(pool.address);
-
-            //token_address: true,
-            //symbol: true,
-            //price_change_percentage: true,
-            //transactions_5m: true,
-            //holders: true,
-            //top10: true,
-
-        //return `⚡️ ${pool.id}. ${pool.name}
         return `Smart Money Buy: *${pool.symbol}*⚡️⚡️⚡️: \n\n⚡️ ${pool.symbol}(${pool.name})\n📍 ${pool.token_address}\n\n⏱️  5m | 1h |6h: *${pool.price_change_percentage}*\n🔄 5m Txs/Vol: *${pool.transactions_5m}*\n💰 Liq: \$*${pool.reserve_in_usd}*🔥\n👥 Holder: *${pool.holders}*\n📅 Open: *${pool.pool_created_at}*\n🏆 Top 10: *${pool.top10}*\n📈 *[${pool.dex}](${pool.link})*\n\n`;
+    }
+
+    const formatPoolToMarkdown2 = (pool: any, index: number) => {
+        return `⚡️ ${pool.symbol}(${pool.name})\n📍 ${pool.token_address}\n📈 *[${pool.dex}](${pool.link})*\n\n`;
     }
 
     // Then in your controller:
     const pools = await this.geckoService.getAllPools(false);
     const markdown = pools.slice(0,1).map((pool, index) => formatPoolToMarkdown(pool, index)).join('\n');
+    const markdown2 = pools.slice(1).map((pool, index) => formatPoolToMarkdown2(pool, index)).join('\n');
 
-    return "🔥*TOP tokens on BNB*\n" + markdown;
+    return "🔥*TOP tokens on BNB*\n" + markdown + markdown2;
 
   }
 
-  //@Get(":id")
-  //async getPoolById() {
-  //  return this.geckoService.getAllPools();
-  //}
-
-  //@Get("history/:id")
-  //async getPoolHistory() {
-  //  return this.geckoService.getAllPools();
-  //}
-}
