@@ -6,6 +6,7 @@ import { Repository } from 'typeorm';
 import { ethers } from 'ethers';
 import { HttpService } from '@nestjs/axios';
 import { firstValueFrom } from 'rxjs';
+import { ConfigService } from '@nestjs/config';
 
 @Injectable()
 export class BalanceTrackerService {
@@ -14,6 +15,7 @@ export class BalanceTrackerService {
   private readonly logger = new Logger(BalanceTrackerService.name);
 
   constructor(
+    private config: ConfigService,
     private readonly httpService: HttpService,
     @InjectRepository(SmartAddress)
     private readonly smartRepo: Repository<SmartAddress>,
@@ -46,16 +48,23 @@ export class BalanceTrackerService {
           const isOut = previous > currentBalance;
           this.logger.warn(`[alert] address ${entry.address} ${isOut ? 'transferred' : 'received'} ${ethers.formatEther(diff)} BNB`);
 
-          const texts = `💰【大户监控 Smart Money Watch】💰🔍🔍\n📍 地址 Address: ${entry.address}\n📈 ${isOut ? '发送Sent' : '收到Received'}: 13.668315262493647261 BNB`
+          const texts = `💰【大户监控 Smart Money Watch】💰🔍🔍\n📍 地址 Address: ${entry.address}\n📈 ${isOut ? '发送Sent' : '收到Received'}: ${ethers.formatEther(diff)} BNB`
+
+          
+          const bot_url = this.config.get<string>('TGBOT_URL');
+          if (!bot_url) {
+              throw new Error('TGBOT_URL is not defined');
+          }
+          this.logger.log(`TGBOT_URL: ${bot_url}`);
 
           const res = await firstValueFrom(
               this.httpService.post(
-                'http://127.0.0.1:6666/mission',  //TODO
+                bot_url,
                 {
-                  bot_name: 'modelstation_test_bot', //TODO
+                  bot_name: entry.botname,
                   data: JSON.stringify({
                       chat_id: entry.owner,
-                      text: `address ${entry.address} ${isOut ? 'transferred' : 'received'} ${ethers.formatEther(diff)} BNB`,
+                      text: texts,
                   }),
                 },
                 { headers: { accept: 'application/json' } },
@@ -78,7 +87,7 @@ export class BalanceTrackerService {
     //return balance.toString();
   }
 
-  async add_address(address: string, owner: string) {
+  async add_address(address: string, owner: string, botname: string) {
     const exists = await this.smartRepo.findOne({ where: { owner, address } });
     if (exists) {
       return;
@@ -94,7 +103,7 @@ export class BalanceTrackerService {
     let amount = await this.get_balance(address)
     this.logger.log(`Balance for ${address}: ${amount}`);
 
-    const newAddress = this.smartRepo.create({ address, owner, lastBalance: amount });
+    const newAddress = this.smartRepo.create({ address, owner, botname, lastBalance: amount });
     await this.smartRepo.save(newAddress);
   }
 

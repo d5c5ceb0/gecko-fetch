@@ -13,7 +13,7 @@ export class BscController {
     @HttpCode(200)
     async addTrackAddress(@Body() body: CreateAddressDto) {
         this.logger.log(`Adding address to track: ${body.address}, ${body.owner}`);
-        let amount = await this.bscService.add_address(body.address, body.owner);
+        let amount = await this.bscService.add_address(body.address, body.owner, body.botname);
     }
 
     @Get('address')

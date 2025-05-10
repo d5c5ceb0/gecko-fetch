@@ -11,6 +11,9 @@ export class SmartAddress {
   @Column()
   owner: string;
 
+  @Column()
+  botname: string;
+
   @Column()//{ type: 'decimal', default: 0 })
   lastBalance: string;
 

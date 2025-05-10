@@ -10,4 +10,8 @@ export class CreateAddressDto {
     @ApiProperty({ example: '7532043229' })
     @IsString()
     owner: string;
+
+    @ApiProperty({ example: 'xxx_bot' })
+    @IsString()
+    botname: string;
 }

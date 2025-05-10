@@ -29,11 +29,11 @@ export class Pool {
   @Column()
   top10: string;
 
-  @Column({ type: 'numeric', nullable: true })
-  base_token_price_usd: number;
+  @Column({ nullable: true })
+  base_token_price_usd: string;
 
-  @Column({ type: 'numeric', nullable: true })
-  reserve_in_usd: number;
+  @Column({ nullable: true })
+  reserve_in_usd: string;
 
   @Column()
   dex: string;

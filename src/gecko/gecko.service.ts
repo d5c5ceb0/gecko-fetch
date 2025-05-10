@@ -164,8 +164,8 @@ export class GeckoService {
           transactions_5m: trans_volume_5m || undefined,
           holders: "125",
           top10: "17%",
-          base_token_price_usd: this.parseNumber(attributes.base_token_price_usd),
-          reserve_in_usd: this.parseNumber(attributes.reserve_in_usd),
+          base_token_price_usd: attributes.base_token_price_usd,
+          reserve_in_usd: attributes.reserve_in_usd,
           dex: relationships?.dex?.data?.id || undefined,
           link: attributes.address ? link : undefined, // Convert null to undefined
           updated_at: new Date(),
