@@ -1,8 +1,5 @@
-nestjs-backend-template
+# tg_bot_services
 
-## Description
-
-This is a template for a NestJS backend application. 
 
 ## Project setup
 
