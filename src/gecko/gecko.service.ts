@@ -6,23 +6,24 @@ import { Repository, In } from 'typeorm';
 import { Pool } from './entities/pool.entity';
 import { TopPool } from './entities/top-pool.entity';
 import { NewPool } from './entities/new-pool.entity';
+import { SubscriptionEntity } from './entities/subscription.entity';
 import { firstValueFrom } from 'rxjs';
+import { ConfigService } from '@nestjs/config';
 
 @Injectable()
 export class GeckoService {
   private readonly logger = new Logger(GeckoService.name);
 
   constructor(
+    private config: ConfigService,
     private readonly httpService: HttpService,
-    @InjectRepository(Pool)
-    private readonly poolRepo: Repository<Pool>,
-    @InjectRepository(TopPool)
-    private readonly topPoolRepo: Repository<TopPool>,
-    @InjectRepository(NewPool)
-    private readonly newPoolRepo: Repository<NewPool>
+    @InjectRepository(Pool) private readonly poolRepo: Repository<Pool>,
+    @InjectRepository(TopPool) private readonly topPoolRepo: Repository<TopPool>,
+    @InjectRepository(NewPool) private readonly newPoolRepo: Repository<NewPool>,
+    @InjectRepository(SubscriptionEntity) private readonly subscriptionRepo: Repository<SubscriptionEntity>,
   ) {}
 
-  @Cron('0 */1 * * * *')
+  @Cron('0 * */1 * * *')
   async fetchNewPools() {
     this.logger.log('start fetching GeckoTerminal API...');
     try {
@@ -202,4 +203,168 @@ export class GeckoService {
       await this.topPoolRepo.save(topPool);
     }
   }
+
+  async subscribeTopPools(bot_name: string, chat_name: string, chatId: string, action: string) {
+      try {
+          this.logger.log(`subscribing bot_name: ${bot_name}, chat_name: ${chat_name}, chat_id: ${chatId}, action: ${action}`);
+          let existingSubscription = await this.subscriptionRepo.findOne({
+              where: { bot_name, telegram_id: chatId },
+          });
+
+          if (!existingSubscription) {
+              const entry = this.subscriptionRepo.create({
+                  bot_name: bot_name,
+                  chat_name: chat_name,
+                  telegram_id: chatId,
+                  status: true,
+              });
+              existingSubscription = await this.subscriptionRepo.save(entry);
+          }
+
+          if (action === 'unsubscribe') {
+              this.logger.log(`unsubscribing chat_id: ${chatId}`);
+              existingSubscription.status = false;
+              await this.subscriptionRepo.save(existingSubscription);
+          } else if (action === 'subscribe') {
+              this.logger.log(`subscribing chat_id: ${chatId}`);
+              existingSubscription.status = true;
+              await this.subscriptionRepo.save(existingSubscription);
+          } else {
+              this.logger.log(`already subscribed chat_id: ${chatId}`);
+          }
+          
+          return existingSubscription;
+      } catch (err) {
+          this.logger.error('failed to subscribe chat_id', err);
+          throw err;
+      }
+  }
+
+  @Cron('0 0 14 * * *')   //2:00 PM every day
+  //@Cron('0 */1 * * * *')
+  async pubTopPoolsToSubscribers(message: string) {
+      try {
+          const bot_url = this.config.get<string>('TGBOT_URL');
+          if (!bot_url) {
+              throw new Error('TGBOT_URL is not defined');
+          }
+          this.logger.log(`TGBOT_URL: ${bot_url}`);
+
+          const entries = await this.subscriptionRepo.find({
+              where: { status: true },
+          });
+
+
+          for (const entry of entries) {
+              const topPools = await this.getTopPools(entry.chat_name);
+
+              firstValueFrom(
+                  this.httpService.post(
+                      bot_url,
+                      {
+                          bot_name: entry.bot_name,
+                          data: JSON.stringify({
+                              chat_id: entry.telegram_id,
+                              text: topPools,
+                          }),
+                      },
+                      { headers: { accept: 'application/json' } },
+                  )
+              );
+          }
+
+      } catch (err) {
+          this.logger.error('failed to push notification', err);
+      }
+  }
+
+  @Cron('0 0 8 * * *')   //8:00 AM every day
+  //@Cron('30 */1 * * * *')
+  async pubnewPoolsToSubscribers(message: string) {
+      try {
+          const bot_url = this.config.get<string>('TGBOT_URL');
+          if (!bot_url) {
+              throw new Error('TGBOT_URL is not defined');
+          }
+          this.logger.log(`TGBOT_URL: ${bot_url}`);
+
+          const entries = await this.subscriptionRepo.find({
+              where: { status: true },
+          });
+
+          for (const entry of entries) {
+              const newPools = await this.getNewPools(entry.chat_name);
+
+              firstValueFrom(
+                  this.httpService.post(
+                      bot_url,
+                      {
+                          bot_name: entry.bot_name,
+                          data: JSON.stringify({
+                              chat_id: entry.telegram_id,
+                              text: newPools,
+                          }),
+                      },
+                      { headers: { accept: 'application/json' } },
+                  )
+              );
+          }
+
+      } catch (err) {
+          this.logger.error('failed to push notification', err);
+      }
+  }
+
+  async getTopPools(chatName: string) {
+    this.logger.log('chatName: ' + chatName);
+    //if chatName is "unknown", set it to 'BNB'
+    chatName = chatName || 'BNB';
+    if (chatName === 'unknown') {
+        chatName = 'BNB';
+    }
+    this.logger.log('after chatName: ' + chatName);
+
+    const formatPoolToMarkdown = (pool: any, index: number) => {
+        return `Smart Money Buy: *${pool.symbol}*⚡️⚡️⚡️: \n\n⚡️ ${pool.symbol}(${pool.name})\n📍 ${pool.token_address}\n\n⏱️  5m | 1h |6h: *${pool.price_change_percentage}*\n🔄 5m Txs/Vol: *${pool.transactions_5m}*\n💰 Liq: \$*${pool.reserve_in_usd}*🔥\n👥 Holder: -\n📅 Open: *${pool.pool_created_at}*\n🏆 Top 10: -\n📈 [${pool.dex}](${pool.link})\n\n`;
+    }
+
+    const formatPoolToMarkdown2 = (pool: any, index: number) => {
+        return `⚡️ ${pool.symbol}(${pool.name})\n📍 ${pool.token_address}\n📈 [${pool.dex}](${pool.link})\n\n`;
+    }
+
+    // Then in your controller:
+    const pools = await this.getAllPools(false);
+    const markdown = pools.slice(0,1).map((pool, index) => formatPoolToMarkdown(pool, index)).join('\n');
+    const markdown2 = pools.slice(1).map((pool, index) => formatPoolToMarkdown2(pool, index)).join('\n');
+
+    return `🔥*TOP tokens on ${chatName}*\n` + markdown + markdown2 + "\n➕[more](https://pancakeswap.finance/)🔥🔥🔥 \n\n";
+
+  }
+
+  async getNewPools(chatName: string) {
+    this.logger.log('chatName: ' + chatName);
+    //if chatName is "unknown", set it to 'BNB'
+    chatName = chatName || 'BNB';
+    if (chatName === 'unknown') {
+        chatName = 'BNB';
+    }
+    this.logger.log('after chatName: ' + chatName);
+
+
+    const formatPoolToMarkdown = (pool: any, index: number) => {
+        return `Smart Money Buy: *${pool.symbol}*⚡️⚡️⚡️: \n\n⚡️ ${pool.symbol}(${pool.name})\n📍 ${pool.token_address}\n\n⏱️  5m | 1h |6h: *${pool.price_change_percentage}*\n🔄 5m Txs/Vol: *${pool.transactions_5m}*\n💰 Liq: \$*${pool.reserve_in_usd}*🔥\n👥 Holder: -\n📅 Open: *${pool.pool_created_at}*\n🏆 Top 10: -\n📈 [${pool.dex}](${pool.link})\n\n`;
+    }
+
+    const formatPoolToMarkdown2 = (pool: any, index: number) => {
+        return `⚡️ ${pool.symbol}(${pool.name})\n📍 ${pool.token_address}\n📈 [${pool.dex}](${pool.link})\n\n`;
+    }
+
+    // Then in your controller:
+    const pools = await this.getAllPools(true);
+    const markdown = pools.slice(0,1).map((pool, index) => formatPoolToMarkdown(pool, index)).join('\n');
+    const markdown2 = pools.slice(1).map((pool, index) => formatPoolToMarkdown2(pool, index)).join('\n');
+
+    return `🔥*Latest tokens on ${chatName}*\n` + markdown + markdown2 + "\n➕[more](https://pancakeswap.finance/)🔥🔥🔥 \n\n";
+  }
+
 }

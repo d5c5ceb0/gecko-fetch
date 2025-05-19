@@ -8,6 +8,7 @@ import { AuthModule } from './auth/auth.module';
 import { ConfigModule } from '@nestjs/config';
 import { GeckoModule } from './gecko/gecko.module';
 import { BscModule } from './bsc/bsc.module';
+import { TwitterModule } from './twitter/twitter.module';
 
 
 
@@ -37,6 +38,6 @@ import { BscModule } from './bsc/bsc.module';
       //logger: 'advanced-console',
     }),
     ScheduleModule.forRoot(),
-    UserModule, AuthModule, GeckoModule, BscModule],
+    UserModule, AuthModule, GeckoModule, BscModule, TwitterModule],
 })
 export class AppModule {}

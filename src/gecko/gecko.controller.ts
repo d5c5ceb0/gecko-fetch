@@ -1,8 +1,10 @@
-import { Controller, Get } from '@nestjs/common';
+import { Logger, Controller, Get, Post, Body, HttpCode } from '@nestjs/common';
 import { GeckoService } from './gecko.service';
+import { ApiBody } from '@nestjs/swagger';
 
 @Controller('api/v1/pools')
 export class GeckoController {
+  private readonly logger = new Logger(GeckoController.name);
   constructor(private readonly geckoService: GeckoService) {}
 
 
@@ -47,6 +49,28 @@ export class GeckoController {
 
     return "🔥*TOP tokens on BNB*\n" + markdown + markdown2 + "\n➕[more](https://pancakeswap.finance/)🔥🔥🔥 \n\n";
 
+  }
+
+  @Post("subscription")
+  @HttpCode(200)
+  @ApiBody({schema: {
+      type: 'object',
+      properties: {
+          bot_name: { type: 'string' },
+          chat_name: { type: 'string' },
+          chat_id: { type: 'string' },
+          action: { type: 'string', enum: ['subscribe', 'unsubscribe'] },
+      }
+  }})
+  async subscribeTopPools(@Body() body: {bot_name: string, chat_name: string, chat_id: string, action: string}) {
+      try {
+          this.logger.log('Subscribing to top pools: ' + JSON.stringify(body));
+          const { bot_name, chat_name, chat_id, action } = body;
+          const pools = await this.geckoService.subscribeTopPools(bot_name, chat_name, chat_id, action);
+          return pools;
+      } catch (error) {
+          throw new Error('Failed to subscribe: ' + error.message);
+      }
   }
 
 }

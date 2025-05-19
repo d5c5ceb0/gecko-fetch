@@ -22,7 +22,7 @@ export class BalanceTrackerService {
   ) {}
 
   //@Cron(CronExpression.EVERY_MINUTE)
-  @Cron('0 */1 * * * *')
+  @Cron('0 */2 * * * *')
   async handleBalanceCheck() {
     this.logger.log('Checking balances...');
     const addresses = await this.smartRepo.find();
