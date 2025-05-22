@@ -103,9 +103,26 @@ export class GeckoService {
             pool_created_at: true,
         },
         where: { id: In(poolIds) },
-        take: 5  // Limit to 5 records
+        take: 20  // Limit to 5 records
     });
-    return pools;
+
+    //filter pool.symbol != 'usdc'
+    const filteredPools = pools.filter(pool =>
+                                   pool.symbol !== 'USDC' &&
+                                   pool.symbol !== 'USDT' &&
+                                   pool.symbol !== 'BNB' &&
+                                   pool.symbol !== 'ETH' &&
+                                   pool.symbol !== 'WETH' &&
+                                   pool.symbol !== 'BTC' &&
+                                   pool.symbol !== 'WBTC' &&
+                                   pool.symbol !== 'DAI' &&
+                                   pool.symbol !== 'XRP' &&
+                                   pool.symbol !== 'STETH'
+                              ).filter((pool, index, self) =>
+        index === self.findIndex(p => p.symbol === pool.symbol)
+    );
+
+    return filteredPools.slice(0, 5); // Limit to 5 records
     } catch (err) {
         Logger.error('failed to fetch pools from topool', err);
         return [];
@@ -156,6 +173,8 @@ export class GeckoService {
           link = `https://pancakeswap.finance/info/pairs/${attributes.address}`;
       } else if (relationships?.dex?.data?.id === 'pancakeswap_stableswap') {
           link = `https://pancakeswap.finance/info/pairs/${attributes.address}`;
+      } else if (relationships?.dex?.data?.id === 'uniswap-v4-bsc') {
+          link = `https://app.uniswap.org/explore/tokens/bnb/${attributes.address}`;
       }
 
       const newPool = this.poolRepo.create({
@@ -240,7 +259,7 @@ export class GeckoService {
       }
   }
 
-  @Cron('0 0 14 * * *')   //2:00 PM every day
+  @Cron('0 30 */4 * * *')   //2:00 PM every day
   //@Cron('0 */1 * * * *')
   async pubTopPoolsToSubscribers(message: string) {
       try {
@@ -278,7 +297,7 @@ export class GeckoService {
       }
   }
 
-  @Cron('0 0 8 * * *')   //8:00 AM every day
+  @Cron('0 0 */4 * * *')   //8:00 AM every day
   //@Cron('30 */1 * * * *')
   async pubnewPoolsToSubscribers(message: string) {
       try {
