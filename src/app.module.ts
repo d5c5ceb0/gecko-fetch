@@ -9,6 +9,7 @@ import { ConfigModule } from '@nestjs/config';
 import { GeckoModule } from './gecko/gecko.module';
 import { BscModule } from './bsc/bsc.module';
 import { TwitterModule } from './twitter/twitter.module';
+import { SurveyModule } from './survey/survey.module';
 
 
 
@@ -38,6 +39,6 @@ import { TwitterModule } from './twitter/twitter.module';
       //logger: 'advanced-console',
     }),
     ScheduleModule.forRoot(),
-    UserModule, AuthModule, GeckoModule, BscModule, TwitterModule],
+    UserModule, AuthModule, GeckoModule, BscModule, TwitterModule, SurveyModule],
 })
 export class AppModule {}
