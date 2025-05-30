@@ -10,6 +10,7 @@ import { GeckoModule } from './gecko/gecko.module';
 import { BscModule } from './bsc/bsc.module';
 import { TwitterModule } from './twitter/twitter.module';
 import { SurveyModule } from './survey/survey.module';
+import { KolModule } from './kol/kol.module';
 
 
 
@@ -39,6 +40,6 @@ import { SurveyModule } from './survey/survey.module';
       //logger: 'advanced-console',
     }),
     ScheduleModule.forRoot(),
-    UserModule, AuthModule, GeckoModule, BscModule, TwitterModule, SurveyModule],
+    UserModule, AuthModule, GeckoModule, BscModule, TwitterModule, SurveyModule, KolModule],
 })
 export class AppModule {}
