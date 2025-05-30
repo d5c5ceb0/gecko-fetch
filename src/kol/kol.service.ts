@@ -1,4 +1,4 @@
-import { Logger, Injectable } from '@nestjs/common';
+import { Logger, Injectable, BadRequestException } from '@nestjs/common';
 import { KolFetchDate } from './entities/kol-fetch-date.entity';
 import { ConfigService } from '@nestjs/config';
 import { InjectRepository } from '@nestjs/typeorm';
@@ -349,7 +349,8 @@ export class KolService {
 
       const vak_server = this.configService.get<string>('VAK_SERVER');
       if (!vak_server) {
-        throw new Error('VAK_SERVER configuration is missing');
+        //throw new Error('VAK_SERVER configuration is missing');
+        throw new BadRequestException('VAK_SERVER configuration is missing');
       }
       this.logger.log(`VAK_SERVER: ${vak_server}`);
 
@@ -371,7 +372,8 @@ export class KolService {
 
       if (res.status !== 200) {
         this.logger.error(`Failed to bind Kol: ${res.statusText}`);
-        throw new Error(`Failed to bind Kol: ${res.statusText}`);
+        //throw new Error(`Failed to bind Kol: ${res.statusText}`);
+        throw new BadRequestException(`Failed to bind Kol: ${res.statusText}`);
       }
       this.logger.log(`Kol binding response: ${JSON.stringify(res.data)}`);
 
@@ -391,31 +393,60 @@ export class KolService {
         `Last fetch time for account ${saved.twitter_id}: ${saved.start_time}`,
       );
 
-      const tweets = await this.getTweets(saved.twitter_id, saved.start_time);
-      this.logger.log(
-        `Fetched ${tweets.length} tweets for account ${saved.twitter_id}`,
+      this.getTweets(saved.twitter_id, saved.start_time).then(
+        async (tweets) => {
+          this.logger.log(
+            `Fetched ${tweets.length} tweets for account ${saved.twitter_id}`,
+          );
+          this.logger.log(`Tweets: ${JSON.stringify(tweets)}`);
+
+          const fetchEntities = tweets.map((tweet) => {
+            return this.contentRepository.create({
+              user_id: saved.twitter_id,
+              user_name: saved.twitter_name,
+              tweet_id: tweet.tweet_id,
+              content: tweet.content,
+              published_at: new Date(tweet.created_at),
+            });
+          });
+
+          this.logger.log(
+            `Saving ${fetchEntities.length} tweets for account ${saved.twitter_id}`,
+          );
+
+          for (const entry of fetchEntities) {
+            await this.contentRepository.save(entry).catch((error) => {
+              this.logger.error(`Failed to save tweet: ${error.message}`);
+            });
+          }
+        },
       );
-      this.logger.log(`Tweets: ${JSON.stringify(tweets)}`);
 
-      const fetchEntities = tweets.map((tweet) => {
-        return this.contentRepository.create({
-          user_id: saved.twitter_id,
-          user_name: saved.twitter_name,
-          tweet_id: tweet.tweet_id,
-          content: tweet.content,
-          published_at: new Date(tweet.created_at),
-        });
-      });
+      //const tweets = await this.getTweets(saved.twitter_id, saved.start_time);
+      //this.logger.log(
+      //  `Fetched ${tweets.length} tweets for account ${saved.twitter_id}`,
+      //);
+      //this.logger.log(`Tweets: ${JSON.stringify(tweets)}`);
 
-      this.logger.log(
-        `Saving ${fetchEntities.length} tweets for account ${saved.twitter_id}`,
-      );
+      //const fetchEntities = tweets.map((tweet) => {
+      //  return this.contentRepository.create({
+      //    user_id: saved.twitter_id,
+      //    user_name: saved.twitter_name,
+      //    tweet_id: tweet.tweet_id,
+      //    content: tweet.content,
+      //    published_at: new Date(tweet.created_at),
+      //  });
+      //});
 
-      for (const entry of fetchEntities) {
-        await this.contentRepository.save(entry).catch((error) => {
-          this.logger.error(`Failed to save tweet: ${error.message}`);
-        });
-      }
+      //this.logger.log(
+      //  `Saving ${fetchEntities.length} tweets for account ${saved.twitter_id}`,
+      //);
+
+      //for (const entry of fetchEntities) {
+      //  await this.contentRepository.save(entry).catch((error) => {
+      //    this.logger.error(`Failed to save tweet: ${error.message}`);
+      //  });
+      //}
 
       saved.start_time = new Date();
       await this.fetchRepository.save(saved);
@@ -423,7 +454,7 @@ export class KolService {
       this.logger.log(`Kol binding successful: ${JSON.stringify(saved)}`);
     } catch (error) {
       this.logger.error(`Failed to bind Kol: ${error.message}`);
-      throw new Error(`Failed to bind Kol: ${error.message}`);
+      throw error;
     }
   }
 }
