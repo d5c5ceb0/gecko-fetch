@@ -1,4 +1,9 @@
-import { Logger, Injectable, BadRequestException } from '@nestjs/common';
+import {
+  Logger,
+  Injectable,
+  BadRequestException,
+  InternalServerErrorException,
+} from '@nestjs/common';
 import { KolFetchDate } from './entities/kol-fetch-date.entity';
 import { ConfigService } from '@nestjs/config';
 import { InjectRepository } from '@nestjs/typeorm';
@@ -350,7 +355,9 @@ export class KolService {
       const vak_server = this.configService.get<string>('VAK_SERVER');
       if (!vak_server) {
         //throw new Error('VAK_SERVER configuration is missing');
-        throw new BadRequestException('VAK_SERVER configuration is missing');
+        throw new InternalServerErrorException(
+          'VAK_SERVER configuration is missing',
+        );
       }
       this.logger.log(`VAK_SERVER: ${vak_server}`);
 
@@ -368,12 +375,15 @@ export class KolService {
           },
           { headers: { accept: 'application/json' } },
         ),
-      );
+      ).catch((error) => {
+        this.logger.error(`Failed to bind Kol: ${error.message}`);
+        throw new BadRequestException('twitter binding failed');
+      });
 
       if (res.status !== 200) {
         this.logger.error(`Failed to bind Kol: ${res.statusText}`);
         //throw new Error(`Failed to bind Kol: ${res.statusText}`);
-        throw new BadRequestException(`Failed to bind Kol: ${res.statusText}`);
+        throw new BadRequestException('twitter binding failed');
       }
       this.logger.log(`Kol binding response: ${JSON.stringify(res.data)}`);
 

@@ -153,7 +153,7 @@ export class KolController {
       await this.twitterService.bindingKol(bot_name, chat_id, node_id);
     } catch (error) {
       this.logger.error(`Error binding kol: ${error.message}`);
-      throw new Error('Error binding kol');
+      throw error;
     }
 
     //return { message: 'Kol binding successful' };
