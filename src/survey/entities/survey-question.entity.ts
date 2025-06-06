@@ -3,24 +3,16 @@ import {
   Column,
   PrimaryGeneratedColumn,
   CreateDateColumn,
+  Unique,
   ManyToOne,
 } from 'typeorm';
 import { Survey } from './survey.entity';
 import { Question } from './question.entity';
 
-@Entity('answers')
-export class Answer {
+@Entity()
+export class SurveyQuestion {
   @PrimaryGeneratedColumn()
   id: number;
-
-  @Column()
-  chatId: string;
-
-  @Column()
-  botName: string;
-
-  @Column({ nullable: true, type: 'text' })
-  answer: string;
 
   @CreateDateColumn({ type: 'timestamp' })
   createdAt: Date;
@@ -28,9 +20,13 @@ export class Answer {
   @CreateDateColumn({ type: 'timestamp' })
   updatedAt: Date;
 
-  @ManyToOne(() => Survey, (survey) => survey.answers, { onDelete: 'CASCADE' })
+  @ManyToOne(() => Survey, (survey) => survey.surveyQuestions, {
+    onDelete: 'CASCADE',
+  })
   survey: Survey;
 
-  @ManyToOne(() => Question, { eager: true })
+  @ManyToOne(() => Question, (question) => question.surveyQuestions, {
+    eager: true,
+  })
   question: Question;
 }

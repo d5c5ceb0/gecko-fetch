@@ -23,7 +23,8 @@
     "migration:run:dev": "dotenv -e .env.dev -- npx typeorm-ts-node-commonjs migration:run -d src/data-source.ts",
     "migration:run:prod": "dotenv -e .env.prod -- npx typeorm-ts-node-commonjs migration:run -d src/data-source.ts",
     "migration:revert:dev": "dotenv -e .env.dev -- npx typeorm-ts-node-commonjs migration:revert -d src/data-source.ts",
-    "migration:revert:prod": "dotenv -e .env.prod -- npx typeorm-ts-node-commonjs migration:revert -d src/data-source.ts"
+    "migration:revert:prod": "dotenv -e .env.prod -- npx typeorm-ts-node-commonjs migration:revert -d src/data-source.ts",
+    "seed": "NODE_ENV=dev ts-node -r tsconfig-paths/register src/scripts/seed.ts"
   },
   "dependencies": {
     "@nestjs/axios": "^4.0.0",

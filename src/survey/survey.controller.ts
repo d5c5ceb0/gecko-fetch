@@ -1,4 +1,13 @@
-import { Logger, HttpCode, Get, Body, Post, Controller } from '@nestjs/common';
+import {
+  Logger,
+  HttpCode,
+  Get,
+  Body,
+  Post,
+  Controller,
+  Query,
+} from '@nestjs/common';
+import { ApiQuery } from '@nestjs/swagger';
 import { CreateAnswerDto } from './dto/create-answer.dto';
 import { SurveyService } from './survey.service';
 
@@ -27,5 +36,23 @@ export class SurveyController {
     return {
       message: 'Survey answers retrieved successfully',
     };
+  }
+
+  @Get('survey')
+  @ApiQuery({
+    name: 'surveyId',
+    required: false,
+    description: 'ID of the survey to retrieve',
+    type: String,
+  })
+  async getSurvey(@Query('surveyId') surveyId: string) {
+    try {
+      this.logger.log(`Retrieving survey with ID: ${surveyId}`);
+      const survey = await this.surveyService.getSurvey(surveyId);
+      return survey;
+    } catch (error) {
+      this.logger.error(`Error retrieving survey with ID ${surveyId}:`, error);
+      throw new Error('Error retrieving survey');
+    }
   }
 }

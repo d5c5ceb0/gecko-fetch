@@ -3,7 +3,11 @@ import {
   Column,
   PrimaryGeneratedColumn,
   CreateDateColumn,
+  OneToMany,
 } from 'typeorm';
+import { Question } from './question.entity';
+import { SurveyQuestion } from './survey-question.entity';
+import { Answer } from './answer.entity';
 
 @Entity('surveys')
 export class Survey {
@@ -30,4 +34,12 @@ export class Survey {
 
   @CreateDateColumn({ type: 'timestamp' })
   updatedAt: Date;
+
+  @OneToMany(() => SurveyQuestion, (sq) => sq.survey, {
+    cascade: true,
+  })
+  surveyQuestions: SurveyQuestion[];
+
+  @OneToMany(() => Answer, (answer) => answer.survey)
+  answers: Answer[];
 }
